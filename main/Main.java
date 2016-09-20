@@ -10,12 +10,14 @@ public class Main {
 		Maquina maquina = new Maquina();
 		maquina.iniciaMaquina();
 		
+		
 		TabelaProcessos table = new TabelaProcessos();
 		table.criaTabela();
 		try {
 			while(true) {
-				Thread.sleep(2000);
-				table.recebeProcessos(maquina.devolveProcessos()); 
+				Thread.sleep(6000);
+				maquina.devolveProcessos();
+				System.out.println("Devolvendo processos");
 			}
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
