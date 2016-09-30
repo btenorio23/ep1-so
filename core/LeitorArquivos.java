@@ -15,7 +15,7 @@ public class LeitorArquivos {
 	Path arquivos;
 	
 	//Estrutura de mapa para guardar no Integer o n° do programa e no String[] todo o conteudo dele
-	TreeMap<Integer,String[]> programas;
+	public TreeMap<Integer,String[]> programas;
 	
 	public LeitorArquivos() {
 		
@@ -29,19 +29,19 @@ public class LeitorArquivos {
 		
 		//Enquanto o nosso método não retornar null (não consegui ler o arquivo) continuamos
 		while((comandos = this.leArquivos(processoDaVez.toString())) != null) {
-			processoDaVez++;
 			//Adiciona programa com código dele e seus comandos
 			programas.put(processoDaVez, comandos);
+			processoDaVez++;
 		}	
 		
 	}
 	
 	//Le um arquivo por completo e retorna seu conteúdo na forma de String[]
 	public String[] leArquivos(String nomeArquivo) {
+		//System.out.println("nomeArquivo: " + nomeArquivo);
 		
 		ArrayList<String> comandos = new ArrayList<String>(); 
 		arquivos = Paths.get("src/arquivos/"+nomeArquivo + ".txt");
-		
 		try(BufferedReader arquivo = Files.newBufferedReader(arquivos)) {
 			String line = null;
 			while((line = arquivo.readLine()) != null) {
@@ -51,9 +51,7 @@ public class LeitorArquivos {
 			System.out.println("Erro tentando ler o arquivo: " + nomeArquivo);
 			return null;
 		}
-		
 		return comandos.toArray(new String[comandos.size()]);
-		
 	}
 	
 	//Le o próximo comando de um programa, dado seu n° e seu PC
@@ -64,6 +62,20 @@ public class LeitorArquivos {
 	
 	public Integer[] retornaNumeroProgramas() {
 		return programas.keySet().toArray(new Integer[programas.size()]);
+	}
+	
+	public int getQuantum() {
+		arquivos = Paths.get("src/arquivos/quantum.txt");
+		try(BufferedReader arquivo = Files.newBufferedReader(arquivos)) {
+			String line = null;
+			while((line = arquivo.readLine()) != null) {
+				return Integer.parseInt(line);
+			}
+		} catch(IOException ioe) {
+			System.out.println("Erro tentando ler o arquivo do quantum ");
+			return -1;
+		}
+		return -1;
 	}
 	
 	

@@ -10,7 +10,7 @@ public class Main {
 		Maquina maquina = new Maquina();
 		maquina.iniciaMaquina();
 		
-		
+		/*
 		TabelaProcessos table = new TabelaProcessos();
 		table.criaTabela();
 		try {
@@ -23,6 +23,7 @@ public class Main {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		*/
 		
 	}
 	
