@@ -41,26 +41,28 @@ public class Escalonador implements Observer{
 		}		
 	}
 	
-	//método que executa o Round Robin
-	private void proximoPrograma() {
-		//enquanto o programa ainda puder rodar.
-		while(!(clock >= quantum)) {
-			clock++;
-			
-		}
-	}
-	
-	//TODO
-	/*************************************************************************
-	public String[] devolveProcesso(String processo) {
+	//de acordo com o quantum da vez, retorna o processo que deve ser executado.
+	public int devolveProcesso(int nQuantum) {
 		if(executando.isEmpty()) {
-			
+			executando.add(prontos.removeFirst());
+			//precisamos tirar o programa bloqueado e passa-lo para pronto
+			prontos.addLast(bloqueados.removeFirst());
+			return Integer.parseInt(executando.getFirst());
 		}
 		else {
-			return prontos.removeFirst();
-		}
+			//Precisamos verificar se esse é o 4° quantum. Ou seja, acabou a vez do processo rodar
+			if(nQuantum > 3) {
+				//Colocamos o processo executando atual para bloqueado
+				bloqueados.addLast(executando.removeFirst());
+				//Adicionamos o proximo processo pronto como executando
+				executando.addFirst(prontos.removeFirst());
+				prontos.addLast(bloqueados.removeFirst());
+				return Integer.parseInt(executando.getFirst());
+			}
+			prontos.addLast(bloqueados.removeFirst());
+			return Integer.parseInt(executando.getFirst());
+		}		
 	}
-	*/
 
 	//TODO
 	//Método é chamado quando a CPU executa um IO.
@@ -68,6 +70,8 @@ public class Escalonador implements Observer{
 	public void update(Observable o, Object arg) {
 		//Adiciona processo a lista de bloqueados
 		bloqueados.addLast(executando.removeFirst());
+		
+		System.out.println("Argumento passado por" + o + " é: " + arg);
 		
 		//Pega primeiro processo do prontos e o executa.
 		//devolveProcesso(prontos.removeFirst());	
