@@ -56,8 +56,10 @@ public class LeitorArquivos {
 	
 	//Le o próximo comando de um programa, dado seu n° e seu PC
 	public String proximoComando(int numeroPrograma, int PC) {
+		numeroPrograma +=1;
+		PC += 1;
 		String[] programaDesejado = programas.get(new Integer(numeroPrograma));
-		return programaDesejado[PC-1];		
+		return programaDesejado[PC];		
 	}
 	
 	public Integer[] retornaNumeroProgramas() {

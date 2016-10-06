@@ -2,6 +2,8 @@ package core;
 
 import java.util.LinkedList;
 import java.util.Observable;
+import java.util.Observer;
+
 import escalonador.Escalonador;
 
 //Classe responsável por armazenar os registradores, gerenciar todos os "programas" e
@@ -22,105 +24,113 @@ public class Maquina extends Observable{
 		
 		//Escalonador estará de olho na CPU para casos de interrupções de I/O
 		this.addObserver(escalonador);
+		escalonador.setTamanhoTabela(leitorArq.retornaNumeroProgramas().length);
+		
+	}
+	
+	public void setaContexto() {
+		String[] contx = escalonador.devolveContexto();
+		this.REGX = Integer.parseInt(contx[0]);
+		this.REGY = Integer.parseInt(contx[1]);
+		this.PC = Integer.parseInt(contx[2]);
 	}
 	
 	//Inicia a máquina e roda processos
 	public void iniciaMaquina() {
 		
-		int quantumVez = 0;
-		
+		int quantumVez = 1;
+		int processoVez, processoVezProx = 0;
 		//o programa só acaba quando todos os processos forem executados
 		while(true) {
 			
-			String proxComando = leitorArq.proximoComando(escalonador.devolveProcesso(quantumVez), PC);
-			System.out.println("Proximo comando do programa: "+ escalonador.getProcessoVez());
+			//Antes de pedir o proximo comando ao escalonador, caso quantumVez == 3, salva contexto
+			/*
+			if(quantumVez == escalonador.getQuantum()+1) {
+				String contexto[] = {this.REGX+"", this.REGY+"", (this.PC+1)+""};
+				escalonador.salvaContexto(contexto);
+				quantumVez = 1;
+			}
+			*/
+			
+			//************************************************************************************
+			//PROBLEMA: quando lermos proximoComando, escalonador ira user pc antigo, não o novo.
+			
+			String proxComando;
+			
+			processoVez = escalonador.devolveProcesso(quantumVez);
+			System.out.println("Processo numero: "+ processoVez);
+			//trocou de programa, então recupera contexto
+			if(processoVezProx != processoVez) {
+				String contexto[] = {this.REGX+"", this.REGY+"", (this.PC+1)+""};
+				escalonador.salvaContexto(contexto);
+				setaContexto();
+				proxComando = leitorArq.proximoComando(processoVez, this.PC);
+				processoVezProx = processoVez;
+				quantumVez = 1;
+			}
+			else {
+				proxComando = leitorArq.proximoComando(processoVez, this.PC);
+			}
+			
+			
+			//Sleep só para testes ***************
+			try {
+				System.out.println("Quantum da vez: "+quantumVez);
+				
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			
+			//acrescenta pc
+			this.PC +=1;
 			
 			switch(proxComando) {
 			
 			case "E/S":
+				System.out.println("Executando E/S");
+				System.out.println("*************************");
 				this.setChanged();
-				this.notifyObservers();
-				quantumVez = 0;
+				String contexto[] = {this.REGX+"", this.REGY+"", (this.PC+1)+""};
+				this.notifyObservers(contexto);
+				quantumVez = 1;
 				continue;
 				
 			case "COM":
 				System.out.println("Executando COM");
+				System.out.println("*************************");
+				quantumVez++;
 				break;
 				
 			case "SAIDA":
 				System.out.println("Encerrando o Programa");
 				escalonador.encerraPrograma(escalonador.getProcessoVez());
+				quantumVez = 1;
 				break;
 				
 			default:
 				
 				if(proxComando.contains("=")) {
-					System.out.println("Trabalhando com atribuição");
+					//System.out.println("Trabalhando com atribuição");
 					if(proxComando.contains("X")) {
-						this.REGX = proxComando.charAt(proxComando.length()-1);
+						this.REGX = Integer.parseInt(proxComando.split("")[2]);
 						System.out.println("Atributo de X: "+this.REGX);
 					}
 					else {
-						this.REGY = proxComando.charAt(proxComando.length()-1);
+						this.REGY = Integer.parseInt(proxComando.split("")[2]);
 						System.out.println("Atributo de Y: "+this.REGY);
 					}
 				}
+				System.out.println("*************************");
+				quantumVez++;
 			 
-			
 			}
 			
 			
 		}
 		
 	}
-	
-	/*
-	public void executaProgramas() {
-		//Pega o próximo processo do escalonador e o coloca em uma pilha
-		int quantumVez = 0;
-		
-		//executa o processo enquanto não encontrar I/O
-		while(true) {
-			
-			System.out.println(leitorArq.proximoComando(escalonador.getProcessoVez(), this.PC));
-			
-			if(quantumVez == 3) {
-				escalonador.devolveProcesso(quantumVez);
-				//pc vai ser definido por devolveProcesso(). O numero do processo também!
-				//PC = 
-			}
-			
-			//recebe linhas que o programa vai executar:
-			//De acordo com o valor do if de cima, a string é definida com o proximo comando.
-			//String comandos = leitorArq.proximoComando(nPrograma, PC)
-			String comando = null;
-			switch(comando) {
-			
-			case "E/S":
-				System.out.println("É IO, interromper agora!");
-				//notifica que o programa foi interrumpido por IO, o escalonador irá lidar com isso.
-				this.setChanged();
-				this.notifyObservers(1);
-				quantumVez = 0;
-				//repete conteudo do if (que é a troca de contexto)
-				break;				
-			
-			//comando normal da cpu que não causa interrupção nem troca de contexto
-			case "COM":
-				System.out.println("Executando comando do sistema");
-				break;
-				
-			//ainda não definido
-			default: 
-				System.out.println("Executando comando normal");
-				return;				
-			}
-			
-			
-			quantumVez++;
-		}
-		
-	}
-	*/
 	
 }
