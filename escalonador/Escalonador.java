@@ -7,74 +7,96 @@ import java.util.Observer;
 //Classe responsável por escalonar programas da maquina
 public class Escalonador implements Observer{
 
+	//Tamanho do quantum será armazenado aqui
 	private int quantum;
-	private int clock;
+	private int processoVez;
 	
-	//Afinal, escalonador precisa saber o PC do processo? ou somente a referencia a ele?
+	private int[] taBloqueado;
+	
+	BCP tabelaProcessos = new BCP();
+	
+	//Lista de processos prontos e bloqueados
 	LinkedList<String> prontos = new LinkedList<String>();
 	LinkedList<String> bloqueados = new LinkedList<String>();
-	LinkedList<String> executando = new LinkedList<String>();
 
 	private void setQuantum(int q) {
-		quantum = q;
+		this.quantum = q;
+	}
+	
+	private int getQuantum() {
+		return quantum;
+	}
+	
+	public int getProcessoVez() {
+		return this.processoVez;
+	}
+	
+	public void setProcessoVez(int i) {
+		this.processoVez = i;
+	}
+	
+	public void encerraPrograma(int i) {
+		prontos.removeFirst();
+		processoVez = Integer.parseInt(prontos.removeFirst());
+	}
+	
+	public void verificaBloq() {
+		//verificamos por todos que foram bloqueados
+		for(int i : taBloqueado) {
+			//caso ele tenha 0, significa que não foi bloqueado
+			if(i == 0) {
+				//verificamos se ja saiu da lista de bloqueados:
+				for(String s: bloqueados) {
+					//Significa que ainda esta bloqueado, então desbloqueamos
+					if (Integer.parseInt(s) == i) {
+						prontos.addLast(bloqueados.remove(i));
+					}
+					else {
+						continue;
+					}
+				}
+			}
+			//significa que ja foi bloqueado, mas ainda deve ficar como bloqueado
+			else {
+				i--;
+			}
+		}
 	}
 	
 	public Escalonador(Integer[] processos, int q) {
 		for(Integer i : processos) {
 			prontos.add(i.toString());
 		}
-		setQuantum(q);	
+		setQuantum(q);
+		taBloqueado = new int[processos.length];
+		System.out.println("Qual o primeiro a sair da fila? "+ prontos.getFirst());
+		setProcessoVez(0);
 	}
 	
-	public void getProcessos() {
-		for(String processoExecutando : executando) {
-			String[] processoStringE = {processoExecutando, "EXECUTANDO"};
-			TabelaProcessos.recebeData(processoStringE);
-		}
-		for(String processoPronto : prontos) {
-			String[] processoStringP = {processoPronto, "PRONTO"};
-			TabelaProcessos.recebeData(processoStringP);
-		}
-		for(String processoBloqueado : bloqueados) {
-			String[] processoStringB = {processoBloqueado, "BLOQUEADO"};
-			TabelaProcessos.recebeData(processoStringB);
-		}		
-	}
-	
-	//de acordo com o quantum da vez, retorna o processo que deve ser executado.
+	//Método realiza o algoritmo round-robin, recebe como argumento quanto tempo ainda tem 
 	public int devolveProcesso(int nQuantum) {
-		if(executando.isEmpty()) {
-			executando.add(prontos.removeFirst());
-			//precisamos tirar o programa bloqueado e passa-lo para pronto
-			prontos.addLast(bloqueados.removeFirst());
-			return Integer.parseInt(executando.getFirst());
+		
+		//Significa que já rodou todo seu tempo
+		if(nQuantum == getQuantum()) {
+			prontos.addLast(processoVez + "");
+			processoVez = Integer.parseInt(prontos.removeFirst());
+			verificaBloq();
+			return processoVez;
 		}
+		//Significa que ainda pode rodar mais
 		else {
-			//Precisamos verificar se esse é o 4° quantum. Ou seja, acabou a vez do processo rodar
-			if(nQuantum > 3) {
-				//Colocamos o processo executando atual para bloqueado
-				bloqueados.addLast(executando.removeFirst());
-				//Adicionamos o proximo processo pronto como executando
-				executando.addFirst(prontos.removeFirst());
-				prontos.addLast(bloqueados.removeFirst());
-				return Integer.parseInt(executando.getFirst());
-			}
-			prontos.addLast(bloqueados.removeFirst());
-			return Integer.parseInt(executando.getFirst());
-		}		
+			verificaBloq();
+			return processoVez;
+		}
+		
 	}
 
-	//TODO
 	//Método é chamado quando a CPU executa um IO.
 	@Override
 	public void update(Observable o, Object arg) {
-		//Adiciona processo a lista de bloqueados
-		bloqueados.addLast(executando.removeFirst());
-		
-		System.out.println("Argumento passado por" + o + " é: " + arg);
-		
-		//Pega primeiro processo do prontos e o executa.
-		//devolveProcesso(prontos.removeFirst());	
+		System.out.println("Ocorreu um I/O!");
+		bloqueados.addLast(processoVez + "");
+		processoVez = Integer.parseInt(prontos.removeFirst());
 	}
 
 }

@@ -1,10 +1,9 @@
 package core;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Observable;
-
 import escalonador.Escalonador;
+
 //Classe responsável por armazenar os registradores, gerenciar todos os "programas" e
 //gerenciar o Escalonador
 public class Maquina extends Observable{
@@ -14,36 +13,79 @@ public class Maquina extends Observable{
 	
 	//Instância responsável por repassar o próximo comando dos programas
 	LeitorArquivos leitorArq = new LeitorArquivos();
+	//Instância do escalonador que interage com a maquina (CPU)
 	Escalonador escalonador;
 	
 	public Maquina() {
+		//Escalonador recebe o leitor com o indice para "ler os programas" e recebe o quantum
 		escalonador = new Escalonador(leitorArq.retornaNumeroProgramas(), leitorArq.getQuantum());
+		
+		//Escalonador estará de olho na CPU para casos de interrupções de I/O
 		this.addObserver(escalonador);
 	}
 	
-	//Inicia a máquina
+	//Inicia a máquina e roda processos
 	public void iniciaMaquina() {
-			executaProgramas();
-	}
-	
-	//Devolve todos os processos para serem apresentado pela tabela de processos.
-	//Os processos são sempre devolvidos na ordem EXECUTANDO|PRONTOS|BLOQUEADOS
-	public void devolveProcessos() {
-		escalonador.getProcessos();
-	}
-	
-	public void executaProgramas() {
-		//Pega o próximo processo do escalonador e o coloca em uma pilha
-		LinkedList<String> comandos = new LinkedList<String>();
-		int quantum = 0;
-		PC = 0;
-		/******************************************************************/
-		//comandos.addAll(Arrays.asList(escalonador.devolveProcesso()));
 		
+		int quantumVez = 0;
+		
+		//o programa só acaba quando todos os processos forem executados
 		while(true) {
 			
-			if(quantum == 3) {
-				escalonador.devolveProcesso(quantum);
+			String proxComando = leitorArq.proximoComando(escalonador.devolveProcesso(quantumVez), PC);
+			System.out.println("Proximo comando do programa: "+ escalonador.getProcessoVez());
+			
+			switch(proxComando) {
+			
+			case "E/S":
+				this.setChanged();
+				this.notifyObservers();
+				quantumVez = 0;
+				continue;
+				
+			case "COM":
+				System.out.println("Executando COM");
+				break;
+				
+			case "SAIDA":
+				System.out.println("Encerrando o Programa");
+				escalonador.encerraPrograma(escalonador.getProcessoVez());
+				break;
+				
+			default:
+				
+				if(proxComando.contains("=")) {
+					System.out.println("Trabalhando com atribuição");
+					if(proxComando.contains("X")) {
+						this.REGX = proxComando.charAt(proxComando.length()-1);
+						System.out.println("Atributo de X: "+this.REGX);
+					}
+					else {
+						this.REGY = proxComando.charAt(proxComando.length()-1);
+						System.out.println("Atributo de Y: "+this.REGY);
+					}
+				}
+			 
+			
+			}
+			
+			
+		}
+		
+	}
+	
+	/*
+	public void executaProgramas() {
+		//Pega o próximo processo do escalonador e o coloca em uma pilha
+		int quantumVez = 0;
+		
+		//executa o processo enquanto não encontrar I/O
+		while(true) {
+			
+			System.out.println(leitorArq.proximoComando(escalonador.getProcessoVez(), this.PC));
+			
+			if(quantumVez == 3) {
+				escalonador.devolveProcesso(quantumVez);
 				//pc vai ser definido por devolveProcesso(). O numero do processo também!
 				//PC = 
 			}
@@ -59,7 +101,7 @@ public class Maquina extends Observable{
 				//notifica que o programa foi interrumpido por IO, o escalonador irá lidar com isso.
 				this.setChanged();
 				this.notifyObservers(1);
-				quantum = 0;
+				quantumVez = 0;
 				//repete conteudo do if (que é a troca de contexto)
 				break;				
 			
@@ -75,9 +117,10 @@ public class Maquina extends Observable{
 			}
 			
 			
-			quantum++;
+			quantumVez++;
 		}
 		
 	}
+	*/
 	
 }
