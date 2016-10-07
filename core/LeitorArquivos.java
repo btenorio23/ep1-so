@@ -25,21 +25,20 @@ public class LeitorArquivos {
 		//Variável temporária para guardar o conteudo total do arquivo
 		String[] comandos;
 		//Contador para verificar qual arquivo devemos ler
-		Integer processoDaVez = 1;
+		Integer processoDaVez = 0;
 		
 		//Enquanto o nosso método não retornar null (não consegui ler o arquivo) continuamos
 		while((comandos = this.leArquivos(processoDaVez.toString())) != null) {
 			//Adiciona programa com código dele e seus comandos
 			programas.put(processoDaVez, comandos);
 			processoDaVez++;
-		}	
-		
+		}		
 	}
 	
 	//Le um arquivo por completo e retorna seu conteúdo na forma de String[]
 	public String[] leArquivos(String nomeArquivo) {
 		//System.out.println("nomeArquivo: " + nomeArquivo);
-		
+		nomeArquivo = (Integer.parseInt(nomeArquivo) + 1)+"";
 		ArrayList<String> comandos = new ArrayList<String>(); 
 		arquivos = Paths.get("src/arquivos/"+nomeArquivo + ".txt");
 		try(BufferedReader arquivo = Files.newBufferedReader(arquivos)) {
@@ -56,7 +55,7 @@ public class LeitorArquivos {
 	
 	//Le o próximo comando de um programa, dado seu n° e seu PC
 	public String proximoComando(int numeroPrograma, int PC) {
-		numeroPrograma +=1;
+		//numeroPrograma +=1;
 		PC += 1;
 		String[] programaDesejado = programas.get(new Integer(numeroPrograma));
 		return programaDesejado[PC];		

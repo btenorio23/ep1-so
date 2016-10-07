@@ -9,72 +9,40 @@ public class Escalonador extends Observable implements Observer{
 
 	//Tamanho do quantum será armazenado aqui
 	private int quantum;
-	private int processoVez;
 	
-	private int[] taBloqueado;
+	//Não sei o quanto isso é necessário
+	//private int processoVez;	
 	
-	BCP tabelaProcessos = new BCP();
-	
-	//Lista de processos prontos e bloqueados
-	LinkedList<String> prontos = new LinkedList<String>();
-	LinkedList<String> bloqueados = new LinkedList<String>();
+	BCP tabelaProcessos;
 
 	public Escalonador(Integer[] processos, int q) {
-		for(Integer i : processos) {
-			prontos.add(i.toString());
-		}
+		tabelaProcessos = new BCP(processos.length);
 		setQuantum(q);
-		taBloqueado = new int[processos.length];
-		System.out.println("Qual o primeiro a sair da fila? "+ prontos.getFirst());
-		setProcessoVez(0);
+		//setProcessoVez(0);
 	}
 	
-	public void setTamanhoTabela(int numero) {
-		tabelaProcessos.iniciaTabela(numero);
+	public void encerraPrograma(int i) {
+		tabelaProcessos.removeProcesso();
 	}
 	
 	private void setQuantum(int q) {
 		this.quantum = q;
 	}
-	
+
 	public int getQuantum() {
 		return quantum;
 	}
 	
-	public int getProcessoVez() {
+	/*public int getProcessoVez() {
 		return this.processoVez;
-	}
+	}*/
 	
-	public void setProcessoVez(int i) {
+	/*public void setProcessoVez(int i) {
 		this.processoVez = i;
-	}
-	
-	public void encerraPrograma(int i) {
-		prontos.removeFirst();
-		tabelaProcessos.removeTabela(processoVez);
-		processoVez = Integer.parseInt(prontos.removeFirst());
-	}
-	
-	/* Aparentemente não é necessário
-	//verifica status de um processo bloqueado 
-	public boolean verificaProxBloqueado() {
-		if(bloqueados.isEmpty())
-			return false;
-		int status = taBloqueado[Integer.parseInt(bloqueados.getFirst())];
-		if(status == 1) {
-			//reseta ele
-			taBloqueado[Integer.parseInt(bloqueados.getFirst())] = 0;
-			prontos.addLast(bloqueados.removeFirst());
-		}
-		if(status > 1) {
-			taBloqueado[Integer.parseInt(bloqueados.getFirst())]--;
-		}
-		return true;
-	}
-	*/
+	}*/
 	
 	//verifica status de todos processos bloqueados
-	public boolean verificaBloqueado() {
+	/*public boolean verificaBloqueado() {
 		boolean achouProc = false;;
 		for(int i: taBloqueado) {
 			if(i == 1) {
@@ -92,9 +60,11 @@ public class Escalonador extends Observable implements Observer{
 			}
 		}
 		return achouProc;
-	}
+	}*/
 	
-	
+	public void verificaBloqueados() {
+		tabelaProcessos.verificaBloqueados();
+	}	
 	
 	//Método realiza o algoritmo round-robin, recebe como argumento quanto tempo ainda tem 
 	public int devolveProcesso(int nQuantum) {

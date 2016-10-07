@@ -26,7 +26,6 @@ public class Maquina extends Observable implements Observer {
 		//Escalonador estará de olho na CPU para casos de interrupções de I/O
 		this.addObserver(escalonador);
 		escalonador.addObserver(this);
-		escalonador.setTamanhoTabela(leitorArq.retornaNumeroProgramas().length);
 		
 	}
 	
@@ -129,6 +128,7 @@ public class Maquina extends Observable implements Observer {
 		}
 		setaContexto((String[]) arg);
 		quantumVez = 1;
+		flagIO = false;
 		
 	}
 	
