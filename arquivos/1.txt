@@ -1,5 +1,5 @@
 TESTE-1
-X=8
+X=1
 COM
 COM
 COM

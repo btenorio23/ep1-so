@@ -1,5 +1,5 @@
 TESTE-3
-X=8
+X=3
 COM
 COM
 COM

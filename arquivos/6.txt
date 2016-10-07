@@ -1,5 +1,5 @@
 TESTE-6
-X=8
+X=6
 COM
 COM
 E/S

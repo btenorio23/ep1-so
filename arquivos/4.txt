@@ -1,5 +1,5 @@
 TESTE-4
-X=8
+X=4
 E/S
 COM
 E/S

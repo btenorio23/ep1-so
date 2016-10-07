@@ -17,11 +17,6 @@ public class BCP {
 		}
 	}
 	
-	//sepa seja um método duplicado, analisar dps
-	public void adicionaTabela(int index, String[] args) {
-		tabelaProcessos.add(index, args);
-	}
-	
 	public void removeTabela(int index) {
 		tabelaProcessos.remove(index);
 	}
@@ -31,6 +26,12 @@ public class BCP {
 	}
 	
 	public void setContexto(String[] contexto, int processoVez) {
+		System.out.println("Adicionando contexto em: "+ processoVez);
+		System.out.println("CONTEXTO:");
+		for(String s: contexto) {
+			System.out.print(" "+ s);
+		}
+		System.out.print("\n");
 		tabelaProcessos.add(processoVez, contexto);
 	}
 	

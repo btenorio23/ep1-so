@@ -5,7 +5,7 @@ import java.util.Observable;
 import java.util.Observer;
 
 //Classe responsável por escalonar programas da maquina
-public class Escalonador implements Observer{
+public class Escalonador extends Observable implements Observer{
 
 	//Tamanho do quantum será armazenado aqui
 	private int quantum;
@@ -55,6 +55,7 @@ public class Escalonador implements Observer{
 		processoVez = Integer.parseInt(prontos.removeFirst());
 	}
 	
+	/* Aparentemente não é necessário
 	//verifica status de um processo bloqueado 
 	public boolean verificaProxBloqueado() {
 		if(bloqueados.isEmpty())
@@ -70,16 +71,19 @@ public class Escalonador implements Observer{
 		}
 		return true;
 	}
+	*/
 	
 	//verifica status de todos processos bloqueados
 	public boolean verificaBloqueado() {
+		boolean achouProc = false;;
 		for(int i: taBloqueado) {
-			//esse processo poderá rodar na proxima interação
 			if(i == 1) {
 				taBloqueado[i] = 0;
 				prontos.add(bloqueados.remove(i));
-				processoVez = Integer.parseInt(prontos.getFirst());
-				return true;
+				if(!achouProc) {
+					processoVez = Integer.parseInt(prontos.getFirst());
+					achouProc = true;
+				}
 			}
 			else {
 				if(i > 1) {
@@ -87,7 +91,7 @@ public class Escalonador implements Observer{
 				}
 			}
 		}
-		return false;
+		return achouProc;
 	}
 	
 	
@@ -95,8 +99,9 @@ public class Escalonador implements Observer{
 	//Método realiza o algoritmo round-robin, recebe como argumento quanto tempo ainda tem 
 	public int devolveProcesso(int nQuantum) {
 		
-		//Significa que já rodou todo seu tempo
+		//Significa que já rodou todo seu tempo, precisamos salvar contexto
 		if(nQuantum == (getQuantum()+1)) {
+			System.out.println("Acabou quantum do processo, trocando...");
 			prontos.addLast(processoVez + "");
 			
 			if(prontos.isEmpty()) {
@@ -109,26 +114,26 @@ public class Escalonador implements Observer{
 				}
 			}
 			else {
+				System.out.println("Processo atual: "+processoVez);
+				this.setChanged();
+				this.notifyObservers(tabelaProcessos.getContexto(processoVez));
 				processoVez = Integer.parseInt(prontos.removeFirst());
+				System.out.println("Proximo processo: "+processoVez);
+				verificaBloqueado();
 			}
-			verificaProxBloqueado();
 			return processoVez;
 		}
 		
 		//Significa que ainda pode rodar mais
 		else {
-			verificaProxBloqueado();
+			verificaBloqueado();
 			return processoVez;
 		}
 		
 	}
 	
 	public void salvaContexto(String[] arg) {
-		System.out.println("***** Contexto *****");
-		for(String teste: (String[])arg) {
-			System.out.print("contx: " + teste + " -> ");
-		}
-		tabelaProcessos.setContexto(arg, processoVez);
+		tabelaProcessos.setContexto((String[])arg, processoVez);
 	}
 	
 	public String[] devolveContexto() {
@@ -139,20 +144,41 @@ public class Escalonador implements Observer{
 	//Método é chamado quando a CPU executa um IO ou troca de processo
 	@Override
 	public void update(Observable o, Object arg) {
-		try {
-			Thread.sleep(2000);
-			System.out.println("***** Contexto *****");
-			for(String teste: (String[])arg) {
-				System.out.print("contx: " + teste + " -> ");
-			}
-			tabelaProcessos.setContexto((String[])arg, processoVez);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		System.out.println("Ocorreu um I/O!");
+		System.out.println("->->Salvando contexto maquina<-<-");
+		
+		//adiciona no bcp o contexto
+		tabelaProcessos.setContexto((String[])arg, processoVez);
+		//adiciona no final da lista de bloqueados
 		bloqueados.addLast(processoVez + "");
-		processoVez = Integer.parseInt(prontos.removeFirst());
+		//adiciona 2 tempos para processo ficar bloqueado
+		taBloqueado[processoVez] = 2;
+		
+		System.out.println("PC: "+ ((String[])arg)[2]);
+		
+		System.out.println("PROCESSO: "+ processoVez);
+		System.out.println("CONTEXTO:");
+		for(String s: tabelaProcessos.getContexto(processoVez)) {
+			System.out.print(s + " ");
+		}
+		System.out.print("\n");
+		
+		//como irá pro "else" do devolveProcesso, atualizamos o 
+		//processo da vez aqui
+		if(prontos.isEmpty()) {
+			if(verificaBloqueado()) {
+				
+			}
+			else {
+				System.out.println("Não existe mais programas!");
+				System.exit(0);
+			}
+		}
+		else {
+			processoVez = Integer.parseInt(prontos.removeFirst());
+		}
+		
+		this.setChanged();
+		this.notifyObservers();
 	}
 
 }
