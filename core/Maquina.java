@@ -11,7 +11,9 @@ public class Maquina extends Observable implements Observer {
 
 	//Registradores da máquina
 	int REGX, REGY, PC;
+	//representa qual quantum a maquina esta executando
 	int quantumVez = 1;
+	//representa se maquina realizou IO ou não
 	boolean flagIO = false;
 	
 	//Instância responsável por repassar o próximo comando dos programas
@@ -29,14 +31,15 @@ public class Maquina extends Observable implements Observer {
 		
 	}
 	
-	public void setaContexto(String[] contx) {
+	//estabelece contexto da maquin
+	public void setaContexto(Integer[] contx) {
 		if(contx == null) {
 			this.REGX = 0; this.REGY = 0; this.PC = 0;
 			return;
 		}
-		this.REGX = Integer.parseInt(contx[0]);
-		this.REGY = Integer.parseInt(contx[1]);
-		this.PC = Integer.parseInt(contx[2]);
+		this.REGX = contx[2];
+		this.REGY = contx[3];
+		this.PC = contx[4];
 	}
 	
 	//Inicia a máquina e roda processos
@@ -48,24 +51,23 @@ public class Maquina extends Observable implements Observer {
 		//o programa só acaba quando todos os processos forem executados
 		while(true) {
 			
-			processoVez = escalonador.devolveProcesso(quantumVez);
+			//Realiza round-robin (caso seja necessário)
+			escalonador.devolveProcesso(quantumVez);
+			
+			//ID do processo que executará o proximo programa
+			processoVez = escalonador.getProcesso();
 			System.out.println("PC -> "+this.PC);
+			
+			//Recebe o próximo comando de acordo com o ID do programa e o PC deste;
 			String proxComando = leitorArq.proximoComando(processoVez, this.PC);
 			System.out.println("Processo numero: "+ (processoVez));			
-						
+			System.out.println("Quantum da vez: "+ quantumVez);
 			
 			//Sleep só para testes ***************
-			try {
-				System.out.println("Quantum da vez: "+quantumVez);
-				
-				Thread.sleep(500);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			//try {Thread.sleep(500);} catch (InterruptedException e) {e.printStackTrace();}
 			
 			
-			//acrescenta pc
+			//Incrementa PC, assim, caso salve o contexto com IO, será salvo para iniciar o programa na proxima linha pós IO
 			this.PC +=1;
 			
 			switch(proxComando) {
@@ -75,7 +77,7 @@ public class Maquina extends Observable implements Observer {
 				System.out.println("Executando E/S");
 				System.out.println("*************************");
 				this.setChanged();
-				String contexto[] = {this.REGX+"", this.REGY+"", (this.PC)+""};
+				Integer contexto[] = {1, 2, this.REGX, this.REGY, this.PC, processoVez};
 				this.notifyObservers(contexto);
 				quantumVez = 1;
 				continue;
@@ -88,7 +90,7 @@ public class Maquina extends Observable implements Observer {
 				
 			case "SAIDA":
 				System.out.println("Encerrando o Programa");
-				escalonador.encerraPrograma(escalonador.getProcessoVez());
+				escalonador.encerraPrograma();
 				quantumVez = 1;
 				break;
 				
@@ -115,12 +117,23 @@ public class Maquina extends Observable implements Observer {
 		
 	}
 
+	//Esse método é chamado para notificar Maquina que o contexto precisa ser salvo e o novo, trocado
 	@Override
 	public void update(Observable o, Object arg) {
+		System.out.println("Trocando processos!");
+		//arg -> numeroProcesso | ID do processo
 		
-		//Depois do processo 5 ou 6, para de salvar contexto;
+		//recuperamos o contexto atual
+		//como sempre é executado com programas prontos, nuca muda status
+		Integer contexto[] = {0,0,this.REGX, this.REGY, this.PC, (Integer)arg};
+		escalonador.salvaContexto(contexto);
 		
-		String contexto[] = {this.REGX+"", this.REGY+"", (this.PC)+""};
+		//mudamos o contexto para o novo processo que irá rodar
+		setaContexto(escalonador.devolveContexto());
+		//comecamos um novo processo, logo
+		quantumVez = 1;
+		
+		/*
 		if(!flagIO) {
 			System.out.println("salvou contexto");
 			escalonador.salvaContexto(contexto);
@@ -129,7 +142,7 @@ public class Maquina extends Observable implements Observer {
 		setaContexto((String[]) arg);
 		quantumVez = 1;
 		flagIO = false;
-		
+		*/
 	}
 	
 }

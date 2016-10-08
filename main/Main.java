@@ -1,7 +1,7 @@
 package main;
 
 import core.Maquina;
-import escalonador.TabelaProcessos;
+import escalonador.TabelaProcessosGUI;
 
 //Classe responsável por iniciar o programa, mostrar todos os arquivos que devem ser lidos, etc
 public class Main {
