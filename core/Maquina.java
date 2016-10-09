@@ -2,10 +2,8 @@
 
 public class Maquina {
 	int REGX, REGY, PC;
-	//representa qual quantum a maquina esta executando
-	int quantumVez = 1;
 
-	public Maquina(int REGX, int REGY) {
+	public Maquina(int REGX, int REGY, int PC) {
 		this.REGX = REGX;
 		this.REGY = REGY;
 		
@@ -26,6 +24,16 @@ public class Maquina {
 	public void setREGY(int rEGY) {
 		REGY = rEGY;
 	}
+
+	public int getPC() {
+		return PC;
+	}
+
+	public void setPC(int pC) {
+		PC = pC;
+	}
+	
+	
 	
 	
 	
