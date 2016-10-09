@@ -1,4 +1,4 @@
-package core;
+
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -8,6 +8,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
+
+
 //Classe responsável por ler todos os arquivos e repassar para a maquina
 public class LeitorArquivos {
 
@@ -15,30 +17,39 @@ public class LeitorArquivos {
 	Path arquivos;
 	
 	//Estrutura de mapa para guardar no Integer o n° do programa e no String[] todo o conteudo dele
-	public TreeMap<Integer,String[]> programas;
+	public TreeMap<Integer,BCP> programas;
 	
 	public LeitorArquivos() {
+
+	}
+	
+	public TreeMap<Integer, BCP> getTabela(){
 		
 		//Para iniciarmos a maquina, precisamos ler todos os arquivos.
-		programas = new TreeMap<Integer,String[]>();
+		programas = new TreeMap<Integer,BCP>();
 		
 		//Variável temporária para guardar o conteudo total do arquivo
 		String[] comandos;
 		//Contador para verificar qual arquivo devemos ler
-		Integer processoDaVez = 0;
+		Integer processoDaVez = 1;
 		
 		//Enquanto o nosso método não retornar null (não consegui ler o arquivo) continuamos
 		while((comandos = this.leArquivos(processoDaVez.toString())) != null) {
 			//Adiciona programa com código dele e seus comandos
-			programas.put(processoDaVez, comandos);
+			BCP aux = new BCP(0, 1, comandos, "TESTE-" + processoDaVez +"", 0, 0);
+			programas.put(processoDaVez, aux);
+			
+			
+			
 			processoDaVez++;
-		}		
+		}
+		
+		return programas;
 	}
-	
 	//Le um arquivo por completo e retorna seu conteúdo na forma de String[]
 	public String[] leArquivos(String nomeArquivo) {
 		//System.out.println("nomeArquivo: " + nomeArquivo);
-		nomeArquivo = (Integer.parseInt(nomeArquivo) + 1)+"";
+		nomeArquivo = (Integer.parseInt(nomeArquivo))+"";
 		ArrayList<String> comandos = new ArrayList<String>(); 
 		arquivos = Paths.get("src/arquivos/"+nomeArquivo + ".txt");
 		try(BufferedReader arquivo = Files.newBufferedReader(arquivos)) {
@@ -51,18 +62,6 @@ public class LeitorArquivos {
 			return null;
 		}
 		return comandos.toArray(new String[comandos.size()]);
-	}
-	
-	//Le o próximo comando de um programa, dado seu n° e seu PC
-	public String proximoComando(int numeroPrograma, int PC) {
-		//numeroPrograma +=1;
-		PC += 1;
-		String[] programaDesejado = programas.get(new Integer(numeroPrograma));
-		return programaDesejado[PC];		
-	}
-	
-	public Integer[] retornaNumeroProgramas() {
-		return programas.keySet().toArray(new Integer[programas.size()]);
 	}
 	
 	public int getQuantum() {
