@@ -1,98 +1,166 @@
-package escalonador;
-
-import java.util.Observable;
-import java.util.Observer;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.TreeMap;
 
 //Classe responsável por escalonar programas da maquina
-public class Escalonador extends Observable implements Observer{
-
-	//Tamanho do quantum será armazenado aqui
-	private int quantum;
+public class Escalonador implements Runnable {
+	LeitorArquivos leitor;
+	Maquina maquina;
+	TreeMap<Integer,BCP> tabelaProcessos = new TreeMap<Integer,BCP>();
+	boolean flagIO = false;
+	Fila prontos;
+	Fila bloqueados;
+	int quantum;
+	int tempoBloqueado = 2;
 	
-	//Não sei o quanto isso é necessário
-	//private int processoVez;	
-	
-	//Escalonador guarda referencia a tabela de processos que tem todos os bcps
-	TabelaProcessos tabelaProcessos;
-
-	public Escalonador(Integer[] processos, int q) {
-		//inicia a tabela com o numero de processos certos
-		tabelaProcessos = new TabelaProcessos(processos.length);
-		//setamos o quantum que o escalonador irá usar
-		setQuantum(q);
-		//setProcessoVez(0);
-	}
-	
-	public int getProcesso() {
-		return tabelaProcessos.getNumeroProcesso();
-	}
-	
-	//Remove totalmente o programa da tabela de processos
-	public void encerraPrograma() {
-		tabelaProcessos.removeProcesso();
-	}
-	
-	//seta o quantum do escalonador
-	private void setQuantum(int q) {
-		this.quantum = q;
-	}
-
-	//recupera o quantum do escalonador
-	public int getQuantum() {
-		return quantum;
-	}
-	
-	//verifica todos os processos que estão bloqueado e ve quais podem voltar para "prontos" e quais não
-	public void verificaBloqueados() {
-		tabelaProcessos.verificaBloqueados();
-	}	
-	
-	//Método realiza o algoritmo round-robin, recebe como argumento quanto tempo ainda tem.
-	public void devolveProcesso(int nQuantum) {
-		//nQuantum é quantos quantums um processo já rodou na CPU
+	public Escalonador(){
 		
-		//Significa que já rodou todo seu tempo, precisamos salvar contexto
-		if(nQuantum == (getQuantum()+1)) {
-			System.out.println("Acabou quantum do processo, trocando...");
-			
-			//Notifica a CPU de que será trocado o contexto, logo, CPU salva contexto antigo através do método update
-			this.setChanged();
-			this.notifyObservers(tabelaProcessos.getNumeroProcesso());
-			
+		maquina = new Maquina(0, 0, 1);
+		
+		leitor = new LeitorArquivos();
+		quantum = leitor.getQuantum();
+
+		//tabelaProcessos = );
+		prontos = new Fila();
+		bloqueados = new Fila();
+		
+		tabelaProcessos = leitor.getTabela();
+		
+		for(int i = 1; i <= tabelaProcessos.size(); i++){
+			prontos.insere(i);
 		}
-		//Caso o nQuantum seja menor, o processo ainda pode rodar outras vezes
 	}
 	
-	//adiciona/atualiza o contexto do argumento na tabela de processos
-	public void salvaContexto(Integer[] arg) {
-		tabelaProcessos.adicionaFinalPronto(arg);
+	
+	public void run(){
+			while(tabelaProcessos.size() > 0){
+				int quantumAtual = 1;
+				int proc = 1;
+				maquina.setPC(1);
+				
+				while (prontos.size() == 0) {  
+					diminuiBloqueados();
+				}
+				//Remove o primeiro processo na fila de prontos
+				proc = prontos.remove();
+				
+				//Seta o processo atual como Executando
+				tabelaProcessos.get(proc).setEstado(2);
+				while(quantumAtual < quantum){
+	
+					System.out.println(tabelaProcessos.get(proc).getNomeProcesso());
+					
+					String proxComando = tabelaProcessos.get(proc).codProg[maquina.getPC()+1];
+					
+					System.out.println(proxComando);
+					maquina.setPC(maquina.getPC()+1);
+					
+					switch(proxComando) {
+					
+					case "E/S":
+						flagIO = true;
+						
+						System.out.println("Executando E/S");
+						System.out.println("*************************");
+						
+						break;
+						
+					case "COM":
+						System.out.println("Executando COM");
+						System.out.println("*************************");
+						
+						break;
+						
+					case "SAIDA":
+						System.out.println("Encerrando o Programa");
+						encerraProcesso(proc);
+	
+						break;
+						
+					default:
+						
+						if(proxComando.contains("=")) {
+							//System.out.println("Trabalhando com atribuição");
+							if(proxComando.contains("X")) {
+								maquina.setREGX(Integer.parseInt(proxComando.split("")[2]));
+								System.out.println("Atributo de X: " + maquina.getREGX());
+								
+							}
+							else {
+								maquina.setREGY(Integer.parseInt(proxComando.split("")[2]));
+								System.out.println("Atributo de Y: "+maquina.getREGY());
+								
+							}
+						}
+						System.out.println("*************************");
+					 
+					}
+					if(flagIO == true){
+						bloqueiaProcesso(proc);
+						trocaProcesso(proc);
+					}
+					quantumAtual++;
+					System.out.println("Q atual " + quantumAtual);
+					System.out.println("Q  " + quantum);
+				}
+				trocaProcesso(proc);
+				diminuiBloqueados();
+				
+			}
+			
+
+
 	}
 	
-	//retorna o processo do programa que estará executando
-	public Integer[] devolveContexto() {
-		return tabelaProcessos.retornaPronto();
+	
+	//M�todo auxiliar para diminuir o tempo dos processos bloqueados
+	void diminuiBloqueados(){
+		int processo;
+		List<Integer> aux = new LinkedList<Integer>();
+		while(bloqueados.iterator().hasNext()){
+			processo = bloqueados.iterator().next();
+			tabelaProcessos.get(processo).decTempBloq();
+			if(tabelaProcessos.get(processo).gettDesbloq() == 0){
+				aux.add(processo);
+				tabelaProcessos.get(processo).setEstado(1);
+				prontos.insere(processo);
+				
+			}
+		}
+		bloqueados.removeAll(aux);
+	}
+	//Bloqueia um processo e salva seu contexto
+	void bloqueiaProcesso(int processo){
+		salvaContexto(processo);
+		tabelaProcessos.get(processo).setEstado(0);
+		tabelaProcessos.get(processo).setTempoBloq(tempoBloqueado);
+		bloqueados.insere(processo);
+		
+	}
+	// Salva o contexto atual do processo
+	void salvaContexto(int processo){
+		tabelaProcessos.get(processo).setPC(maquina.getPC());
+		tabelaProcessos.get(processo).setREGX(maquina.getREGX());
+		tabelaProcessos.get(processo).setREGY(maquina.getREGY());
+		
+	}
+	
+	//Faz a preemp��o do processo
+	void trocaProcesso(int processo){
+		salvaContexto(processo);
+		prontos.insere(processo);
+		
+		
+	}
+	
+	void encerraProcesso(int processo){
+		tabelaProcessos.remove(processo);
+		
+		
 	}
 
-	//Salva o contexto
-	//Método é chamado quando a CPU executa um IO
-	@Override
-	public void update(Observable o, Object arg) {
-		System.out.println("->->Salvando contexto maquina<-<-");
-		
-		//adiciona no bcp o contexto
-		tabelaProcessos.bloqueia((Integer[])arg);
-		//quando executamos o método bloqueia, ele ja atualiza a tabela para selecionar qual o proximo processo que rodará
-		System.out.println("PC: "+ ((Integer[])arg)[2]);
-		
-		System.out.println("CONTEXTO:");
-		for(Integer x: (Integer[])arg) {
-			System.out.print(x + " ");
-		}
-		System.out.print("\n");
-		
-		//talvez não precise disso
-		//this.setChanged();
-		//this.notifyObservers();
-	}
+	
+
 
 }
