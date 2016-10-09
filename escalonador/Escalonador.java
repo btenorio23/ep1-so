@@ -7,8 +7,9 @@ import java.util.TreeMap;
 public class Escalonador implements Runnable {
 	LeitorArquivos leitor;
 	Maquina maquina;
+	int quantumAtual = 0;
 	TreeMap<Integer,BCP> tabelaProcessos = new TreeMap<Integer,BCP>();
-	boolean flagIO = false;
+	
 	Fila prontos;
 	Fila bloqueados;
 	int quantum;
@@ -29,38 +30,47 @@ public class Escalonador implements Runnable {
 		
 		for(int i = 1; i <= tabelaProcessos.size(); i++){
 			prontos.insere(i);
+			System.out.println(i);
 		}
 	}
 	
 	
 	public void run(){
+			
+			boolean flag = false;
+			boolean flagIO = false;
 			while(tabelaProcessos.size() > 0){
-				int quantumAtual = 1;
-				int proc = 1;
-				maquina.setPC(1);
 				
-				while (prontos.size() == 0) {  
-					diminuiBloqueados();
-				}
+				int proc = 1;
+				
+				
+				//while (prontos.size() == 0) {  
+				//	diminuiBloqueados();
+				//}
 				//Remove o primeiro processo na fila de prontos
 				proc = prontos.remove();
+				maquina.setPC(tabelaProcessos.get(proc).getPC());
+				maquina.setREGX(tabelaProcessos.get(proc).getREGX());
+				maquina.setREGY(tabelaProcessos.get(proc).getREGY());
 				
 				//Seta o processo atual como Executando
 				tabelaProcessos.get(proc).setEstado(2);
-				while(quantumAtual < quantum){
-	
+				
+				while(quantumAtual <= quantum){
+					quantumAtual++;
 					System.out.println(tabelaProcessos.get(proc).getNomeProcesso());
 					
-					String proxComando = tabelaProcessos.get(proc).codProg[maquina.getPC()+1];
+					String proxComando = tabelaProcessos.get(proc).codProg[maquina.getPC()];
 					
 					System.out.println(proxComando);
 					maquina.setPC(maquina.getPC()+1);
 					
 					switch(proxComando) {
 					
+					
 					case "E/S":
 						flagIO = true;
-						
+						flag = true;
 						System.out.println("Executando E/S");
 						System.out.println("*************************");
 						
@@ -74,8 +84,8 @@ public class Escalonador implements Runnable {
 						
 					case "SAIDA":
 						System.out.println("Encerrando o Programa");
+						
 						encerraProcesso(proc);
-	
 						break;
 						
 					default:
@@ -96,19 +106,30 @@ public class Escalonador implements Runnable {
 						System.out.println("*************************");
 					 
 					}
-					if(flagIO == true){
-						bloqueiaProcesso(proc);
-						trocaProcesso(proc);
-					}
-					quantumAtual++;
-					System.out.println("Q atual " + quantumAtual);
-					System.out.println("Q  " + quantum);
-				}
-				trocaProcesso(proc);
-				diminuiBloqueados();
-				
+						if(flag == true)
+							break;
+		
 			}
-			
+				
+				//System.out.println("I'm Here!");
+				if(!flag){
+					trocaProcesso(proc);
+				}
+				
+				if(flagIO == true){
+					bloqueiaProcesso(proc);
+					flagIO = false;
+				}
+				flag = false;
+				quantumAtual = 0;
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			 
 
 
 	}
@@ -143,6 +164,7 @@ public class Escalonador implements Runnable {
 		tabelaProcessos.get(processo).setPC(maquina.getPC());
 		tabelaProcessos.get(processo).setREGX(maquina.getREGX());
 		tabelaProcessos.get(processo).setREGY(maquina.getREGY());
+		
 		
 	}
 	
