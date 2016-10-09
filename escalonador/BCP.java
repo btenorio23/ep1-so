@@ -17,6 +17,9 @@ public class BCP {
 	int REGX;
 	int REGY;
 	
+	//Tempo para desbloquear
+	int tDesbloq = 0;
+	
 	public BCP(int pC, int estado, String[] codProg, String nomeProcesso, int rEGX, int rEGY) {
 		
 		PC = pC;
@@ -29,8 +32,8 @@ public class BCP {
 	public int getPC() {
 		return PC;
 	}
-	public void setPC() {
-		PC = PC+1;
+	public void setPC(int t) {
+		PC = t;
 	}
 	public int getEstado() {
 		return estado;
@@ -63,6 +66,19 @@ public class BCP {
 	public void setCodProg(String[] codProg) {
 		this.codProg = codProg;
 	}
+	public int gettDesbloq() {
+		return tDesbloq;
+	}
+	
+	public void setTempoBloq(int t){
+		tDesbloq = t;
+	}
+	public void decTempBloq() {
+		
+		tDesbloq = tDesbloq -1;
+	}
+	
+	
 	
 	
 

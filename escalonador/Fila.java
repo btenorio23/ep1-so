@@ -7,6 +7,7 @@ public class Fila implements Iterable<Integer> {
 	private List<Integer> fila = new LinkedList<Integer>();
 	
 	public void insere(int valor){
+		
 		fila.add(valor);
 	}
 	
@@ -30,6 +31,11 @@ public class Fila implements Iterable<Integer> {
 	@Override
 	public Iterator<Integer> iterator() {
 		return fila.iterator();
+	}
+	
+	public void removeAll(List<Integer> list){
+		fila.removeAll(list);
+		
 	}
 	
 }
