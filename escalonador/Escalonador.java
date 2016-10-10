@@ -27,7 +27,6 @@ public class Escalonador implements Runnable {
 	int tempoBloqueado = 2;
 	int contadorTrocas = 0;
 	int contadorInstrucoes = 0;
-	int quantaTotal = 0;
 	int qtdProcessos = 0;
 	
 	public Escalonador(){
@@ -156,7 +155,6 @@ public class Escalonador implements Runnable {
 					flagIO = false;
 				}
 				quantumAtual = 0;
-				quantaTotal++;
 				sinalFinal = false;
 				
 
@@ -166,6 +164,17 @@ public class Escalonador implements Runnable {
 
 	}
 	
+	public void getMediaTrocas() {
+		escreveLog("MEDIA DE TROCAS: "+contadorTrocas/qtdProcessos);
+	}
+	
+	public void getMediaInstrucoes() {
+		escreveLog("MEDIA DE INSTRUCOES: "+ contadorInstrucoes/contadorTrocas);
+	}
+	
+	public void getQuantum() {
+		escreveLog("QUANTUM: "+quantum);
+	}
 	
 	//M�todo auxiliar para diminuir o tempo dos processos bloqueados
 	void diminuiBloqueados(){
