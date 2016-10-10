@@ -3,6 +3,8 @@ package core;
 
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,7 +26,15 @@ public class LeitorArquivos {
 	public TreeMap<Integer,BCP> programas;
 	
 	public LeitorArquivos() {
-
+		File logFile = new File("src/log/log.txt"); 
+		logFile.getParentFile().mkdirs();
+		
+		arquivos = Paths.get("src/log/log.txt");
+		try(BufferedWriter log = Files.newBufferedWriter(arquivos)) {
+			log.write("teste 1");			
+		} catch(IOException ioe) {
+			System.out.println("Erro ao escrever log file");
+		}		
 	}
 	
 	public TreeMap<Integer, BCP> getTabela(){
@@ -80,6 +90,10 @@ public class LeitorArquivos {
 			return -1;
 		}
 		return -1;
+	}
+	
+	public void escreveLog() {
+			
 	}
 	
 	
