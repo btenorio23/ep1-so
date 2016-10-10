@@ -16,28 +16,57 @@ import core.Maquina;
 
 //Classe responsável por escalonar programas da maquina
 public class Escalonador implements Runnable {
+	
 	//responsáve por ler os arquivos 
 	LeitorArquivos leitor;
+	
+	//CPI
 	Maquina maquina;
+	
+	//QUANTUM ATUAL PARA SABER QUANDO REALIZAR PREEPCAO
 	int quantumAtual = 0;
+	
+	//TABELA DE PROCESSOS BASEADAS NO ID DO PROCESSO
 	TreeMap<Integer,BCP> tabelaProcessos = new TreeMap<Integer,BCP>();
 	
+	//FILA DE PROCESSOS PRONTOS
 	List<Integer> prontos;
+	
+	//FILA DE PROCESSOS BLOQUEADOS
 	List<Integer> bloqueados;
+	
+	//VALOR DO QUANTUM
 	int quantum;
+	
+	//TEMPO QUE UM PROCESSO PRECISA FICAR BLOQUEADO
 	int tempoBloqueado = 2;
+	
+	//CONTADORES USADOS EM LOGFILE
 	int contadorTrocas = 0;
 	int contadorInstrucoes = 0;
 	int qtdProcessos = 0;
 	
 	public Escalonador(){
+		
+		//INICIA O LEITOR E REGISTRA VALOR DO QUANTUM
 		leitor = new LeitorArquivos();
 		quantum = leitor.getQuantum();
 		
+		//AQUI EH CRIADO O LOG FILE
 		BufferedWriter log = null;
-		File logFile = new File("src/log/log"+quantum+ ".txt"); 
-		logFile.getParentFile().mkdirs();	
-		Path arquivos = Paths.get("src/log/log" +quantum  +".txt");
+		File logFile;
+		Path arquivos;
+		if(quantum < 10) {
+			logFile = new File("src/log/log"+ "0" +quantum+ ".txt");
+			logFile.getParentFile().mkdirs();	
+			arquivos= Paths.get("src/log/log"+ "0" +quantum  +".txt");
+		}
+		else {
+			logFile = new File("src/log/log"+quantum+ ".txt");
+			logFile.getParentFile().mkdirs();	
+			arquivos= Paths.get("src/log/log" +quantum  +".txt");
+		}
+		 
 		try {
 			log = Files.newBufferedWriter(arquivos);
 		} catch (IOException e) {
@@ -45,19 +74,27 @@ public class Escalonador implements Runnable {
 			e.printStackTrace();
 		}
 		
+		//INICIA A MAQUINA
 		maquina = new Maquina(0, 0, 1);
-		//tabelaProcessos = );
+		
+		//INICIAMOS AS FILAS 
 		prontos = new LinkedList<Integer>();
 		bloqueados = new LinkedList<Integer>();
 		
+		//RECUPERAMOS A TABELA DE PROCESSO, CRIADA NO LEITOR-ARQUIVOS
 		tabelaProcessos = leitor.getTabela();
+		
+		//DETERMINAMOS QTD DE PROCESSOS
 		qtdProcessos = tabelaProcessos.size();
+		
+		//ADICIONAMOS TODOS COMO PRONTOS
 		for(int i = 1; i <= tabelaProcessos.size(); i++){
 			prontos.add(i);
 			//System.out.println(i);
 		}
 	}
 	
+	//FUNCAO QUE ESCREVE UMA DETERMINADA STRING NO LOG FILE
 	public void escreveLog(String s) {
 		try {
 		    Files.write(Paths.get("src/log/log.txt"), (s+"\n").getBytes(), StandardOpenOption.APPEND);
@@ -66,16 +103,22 @@ public class Escalonador implements Runnable {
 		}
 	}
 	
-	
+	//METODO PRINCIPAL DO ESCALONADOR
 	public void run(){
 			
+			//FLAG PARA QUANDO UM PROGRAMA ACABAR
 			boolean sinalFinal = false;
+			
+			//FLAG PARA REGISTRAR IO
 			boolean flagIO = false;
+			
+			//REPETIMOS ESSE PROCESSO ENQUANTO EXISTIR ALGUM PROGRAMA PARA RODAR
 			while(tabelaProcessos.size()>0){
 				
+				//NUMERO DO PROCESSO QUE SERA EXECUTADO
 				int proc = 1;
 				
-				
+				//VERIFICAMOS SE EXISTE ALGUM PROCESSO PRONTO, CASO NEGATIVO, DIMINUIMOS O NUMERO DE BLOQUEADO
 				while (prontos.size() == 0) {  
 					diminuiBloqueados();
 				}
