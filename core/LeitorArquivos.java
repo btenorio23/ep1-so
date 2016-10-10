@@ -4,11 +4,11 @@ package core;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
@@ -21,20 +21,12 @@ public class LeitorArquivos {
 
 	//Caminho para encontrar os arquivos
 	Path arquivos;
+	BufferedWriter log;
 	
 	//Estrutura de mapa para guardar no Integer o n° do programa e no String[] todo o conteudo dele
 	public TreeMap<Integer,BCP> programas;
 	
 	public LeitorArquivos() {
-		File logFile = new File("src/log/log.txt"); 
-		logFile.getParentFile().mkdirs();
-		
-		arquivos = Paths.get("src/log/log.txt");
-		try(BufferedWriter log = Files.newBufferedWriter(arquivos)) {
-			log.write("teste 1");			
-		} catch(IOException ioe) {
-			System.out.println("Erro ao escrever log file");
-		}		
 	}
 	
 	public TreeMap<Integer, BCP> getTabela(){
@@ -51,6 +43,11 @@ public class LeitorArquivos {
 		while((comandos = this.leArquivos(processoDaVez.toString())) != null) {
 			//Adiciona programa com código dele e seus comandos
 			BCP aux = new BCP(0, 1, comandos, "TESTE-" + processoDaVez +"", 0, 0);
+			try {
+			    Files.write(Paths.get("src/log/log.txt"), ("Carregando TESTE-"+processoDaVez+"\n").getBytes(), StandardOpenOption.APPEND);
+			}catch (IOException e) {
+			    //exception handling left as an exercise for the reader
+			}
 			programas.put(processoDaVez, aux);
 			
 			
@@ -90,10 +87,6 @@ public class LeitorArquivos {
 			return -1;
 		}
 		return -1;
-	}
-	
-	public void escreveLog() {
-			
 	}
 	
 	

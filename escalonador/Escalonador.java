@@ -1,5 +1,12 @@
 package escalonador;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeMap;
@@ -18,8 +25,23 @@ public class Escalonador implements Runnable {
 	List<Integer> bloqueados;
 	int quantum;
 	int tempoBloqueado = 2;
+	int contadorTrocas = 0;
+	int contadorInstrucoes = 0;
+	int quantaTotal = 0;
+	int qtdProcessos = 0;
 	
 	public Escalonador(){
+		
+		BufferedWriter log = null;
+		File logFile = new File("src/log/log.txt"); 
+		logFile.getParentFile().mkdirs();	
+		Path arquivos = Paths.get("src/log/log.txt");
+		try {
+			log = Files.newBufferedWriter(arquivos);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		maquina = new Maquina(0, 0, 1);
 		
@@ -31,10 +53,18 @@ public class Escalonador implements Runnable {
 		bloqueados = new LinkedList<Integer>();
 		
 		tabelaProcessos = leitor.getTabela();
-		
+		qtdProcessos = tabelaProcessos.size();
 		for(int i = 1; i <= tabelaProcessos.size(); i++){
 			prontos.add(i);
-			System.out.println(i);
+			//System.out.println(i);
+		}
+	}
+	
+	public void escreveLog(String s) {
+		try {
+		    Files.write(Paths.get("src/log/log.txt"), (s+"\n").getBytes(), StandardOpenOption.APPEND);
+		}catch (IOException e) {
+		    //exception handling left as an exercise for the reader
 		}
 	}
 	
@@ -64,33 +94,32 @@ public class Escalonador implements Runnable {
 				while(quantumAtual < quantum){
 					quantumAtual++;
 					
-					System.out.println(tabelaProcessos.get(proc).getNomeProcesso());
+					//System.out.println(tabelaProcessos.get(proc).getNomeProcesso());
 					
 					String proxComando = tabelaProcessos.get(proc).codProg[maquina.getPC()];
 					
-					System.out.println(proxComando);
 					maquina.setPC(maquina.getPC()+1);
-					
+					contadorInstrucoes++;
+					escreveLog("Executando TESTE-"+proc);
 					switch(proxComando) {
 					
 					
 					case "E/S":
 						flagIO = true;
 						sinalFinal = true;
-						System.out.println("Executando E/S");
-						System.out.println("*************************");
+						escreveLog("E/S iniciada em TESTE"+proc);
+						//System.out.println("*************************");
 						
 						break;
 						
 					case "COM":
-						System.out.println("Executando COM");
-						System.out.println("*************************");
+						//System.out.println("Executando COM");
+						//System.out.println("*************************");
 						
 						break;
 						
 					case "SAIDA":
-						
-						System.out.println("Encerrando o Programa");
+						escreveLog("TESTE-"+proc+ " terminado." + "X: "+maquina.getREGX() + " Y: "+maquina.getREGY());						
 						sinalFinal = true;
 						encerraProcesso(proc);
 						break;
@@ -101,16 +130,16 @@ public class Escalonador implements Runnable {
 							//System.out.println("Trabalhando com atribuição");
 							if(proxComando.contains("X")) {
 								maquina.setREGX(Integer.parseInt(proxComando.split("")[2]));
-								System.out.println("Atributo de X: " + maquina.getREGX());
+								//System.out.println("Atributo de X: " + maquina.getREGX());
 								
 							}
 							else {
 								maquina.setREGY(Integer.parseInt(proxComando.split("")[2]));
-								System.out.println("Atributo de Y: "+maquina.getREGY());
+								//System.out.println("Atributo de Y: "+maquina.getREGY());
 								
 							}
 						}
-						System.out.println("*************************");
+						//System.out.println("*************************");
 					 
 					}
 						if(sinalFinal == true)
@@ -118,16 +147,16 @@ public class Escalonador implements Runnable {
 		
 			}
 				
-				//System.out.println("I'm Here!");
 				if(sinalFinal != true){
-					trocaProcesso(proc);
+					trocaProcesso(proc, quantumAtual);
 				}
 				
 				if(flagIO == true){
-					bloqueiaProcesso(proc);
+					bloqueiaProcesso(proc, quantumAtual);
 					flagIO = false;
 				}
 				quantumAtual = 0;
+				quantaTotal++;
 				sinalFinal = false;
 				
 
@@ -156,7 +185,9 @@ public class Escalonador implements Runnable {
 		bloqueados.removeAll(aux);
 	}
 	//Bloqueia um processo e salva seu contexto
-	void bloqueiaProcesso(int processo){
+	void bloqueiaProcesso(int processo, int quantumAtual){
+		contadorTrocas++;
+		escreveLog("Interrompendo TESTE"+processo+ "após"+  quantumAtual +"instruções");
 		salvaContexto(processo);
 		tabelaProcessos.get(processo).setEstado(0);
 		tabelaProcessos.get(processo).setTempoBloq(tempoBloqueado);
@@ -172,8 +203,10 @@ public class Escalonador implements Runnable {
 		
 	}
 	
-	//Faz a preemp��o do processo
-	void trocaProcesso(int processo){
+	//Faz a preempcao do processo
+	void trocaProcesso(int processo, int quantumAtual){
+		escreveLog("Interrompendo TESTE"+processo+ "após"+  quantumAtual +"instruções");
+		contadorTrocas++;
 		salvaContexto(processo);
 		tabelaProcessos.get(processo).setEstado(1);
 		prontos.add(processo);
