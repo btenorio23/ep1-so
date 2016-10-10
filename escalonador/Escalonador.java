@@ -37,7 +37,7 @@ public class Escalonador implements Runnable {
 	
 	public void run(){
 			
-			boolean flag = false;
+			boolean sinalFinal = false;
 			boolean flagIO = false;
 			while(tabelaProcessos.size()>0){
 				
@@ -59,6 +59,7 @@ public class Escalonador implements Runnable {
 				
 				while(quantumAtual < quantum){
 					quantumAtual++;
+					
 					System.out.println(tabelaProcessos.get(proc).getNomeProcesso());
 					
 					String proxComando = tabelaProcessos.get(proc).codProg[maquina.getPC()];
@@ -71,7 +72,7 @@ public class Escalonador implements Runnable {
 					
 					case "E/S":
 						flagIO = true;
-						flag = true;
+						sinalFinal = true;
 						System.out.println("Executando E/S");
 						System.out.println("*************************");
 						
@@ -86,7 +87,7 @@ public class Escalonador implements Runnable {
 					case "SAIDA":
 						
 						System.out.println("Encerrando o Programa");
-						flag = true;
+						sinalFinal = true;
 						encerraProcesso(proc);
 						break;
 						
@@ -108,13 +109,13 @@ public class Escalonador implements Runnable {
 						System.out.println("*************************");
 					 
 					}
-						if(flag == true)
+						if(sinalFinal == true)
 							break;
 		
 			}
 				
 				//System.out.println("I'm Here!");
-				if(!flag){
+				if(sinalFinal != true){
 					trocaProcesso(proc);
 				}
 				
@@ -122,15 +123,10 @@ public class Escalonador implements Runnable {
 					bloqueiaProcesso(proc);
 					flagIO = false;
 				}
-				
-				flag = false;
 				quantumAtual = 0;
-			/*	try {
-					//Thread.sleep(500);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}*/
+				sinalFinal = false;
+				
+
 			}
 			 
 
@@ -146,8 +142,9 @@ public class Escalonador implements Runnable {
 			processo = g;
 			tabelaProcessos.get(processo).decTempBloq();
 			if(tabelaProcessos.get(processo).gettDesbloq() == 0){
-				aux.add(processo);
 				tabelaProcessos.get(processo).setEstado(1);
+				aux.add(processo);
+				
 				prontos.add(processo);
 				
 			}
@@ -174,6 +171,7 @@ public class Escalonador implements Runnable {
 	//Faz a preempção do processo
 	void trocaProcesso(int processo){
 		salvaContexto(processo);
+		tabelaProcessos.get(processo).setEstado(1);
 		prontos.add(processo);
 		
 		
