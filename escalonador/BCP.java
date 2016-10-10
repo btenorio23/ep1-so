@@ -1,3 +1,5 @@
+package escalonador;
+
 
 
 public class BCP {
@@ -7,7 +9,7 @@ public class BCP {
 	// Estado Bloqueado = 0, Pronto = 1, Executando = 2
 	int estado = 1;
 	
-	//Referência ao código na memória
+	//Referï¿½ncia ao cï¿½digo na memï¿½ria
 	String[] codProg = new String[21];
 	
 	//Nome do processo

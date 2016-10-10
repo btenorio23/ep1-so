@@ -1,7 +1,11 @@
-import java.util.ArrayList;
+package escalonador;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeMap;
+
+import core.LeitorArquivos;
+import core.Maquina;
 
 //Classe responsÃ¡vel por escalonar programas da maquina
 public class Escalonador implements Runnable {
@@ -134,7 +138,7 @@ public class Escalonador implements Runnable {
 	}
 	
 	
-	//Método auxiliar para diminuir o tempo dos processos bloqueados
+	//Mï¿½todo auxiliar para diminuir o tempo dos processos bloqueados
 	void diminuiBloqueados(){
 		int processo;
 		List<Integer> aux = new LinkedList<Integer>();
@@ -168,7 +172,7 @@ public class Escalonador implements Runnable {
 		
 	}
 	
-	//Faz a preempção do processo
+	//Faz a preempï¿½ï¿½o do processo
 	void trocaProcesso(int processo){
 		salvaContexto(processo);
 		tabelaProcessos.get(processo).setEstado(1);

@@ -1,3 +1,6 @@
+package main;
+
+import escalonador.Escalonador;
 
 public class Main {
 

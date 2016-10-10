@@ -1,3 +1,5 @@
+package core;
+
 
 
 import java.io.BufferedReader;
@@ -7,6 +9,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.TreeMap;
+
+import escalonador.BCP;
 
 
 
