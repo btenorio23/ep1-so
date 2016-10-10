@@ -99,7 +99,12 @@ public class Escalonador implements Runnable {
 	//FUNCAO QUE ESCREVE UMA DETERMINADA STRING NO LOG FILE
 	public void escreveLog(String s) {
 		try {
-		    Files.write(Paths.get("src/log/log"+ quantum +".txt"), (s+"\n").getBytes(), StandardOpenOption.APPEND);
+			if(quantum < 10) {
+				Files.write(Paths.get("src/log/log"+"0" +quantum +".txt"), (s+"\n").getBytes(), StandardOpenOption.APPEND);
+			}
+			else {
+				Files.write(Paths.get("src/log/log"+ quantum +".txt"), (s+"\n").getBytes(), StandardOpenOption.APPEND);
+			}
 		}catch (IOException e) {
 		    //exception handling left as an exercise for the reader
 		}
