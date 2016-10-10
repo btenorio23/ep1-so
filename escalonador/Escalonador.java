@@ -10,8 +10,8 @@ public class Escalonador implements Runnable {
 	int quantumAtual = 0;
 	TreeMap<Integer,BCP> tabelaProcessos = new TreeMap<Integer,BCP>();
 	
-	Fila prontos;
-	Fila bloqueados;
+	List<Integer> prontos;
+	List<Integer> bloqueados;
 	int quantum;
 	int tempoBloqueado = 2;
 	
@@ -23,13 +23,13 @@ public class Escalonador implements Runnable {
 		quantum = leitor.getQuantum();
 
 		//tabelaProcessos = );
-		prontos = new Fila();
-		bloqueados = new Fila();
+		prontos = new LinkedList<Integer>();
+		bloqueados = new LinkedList<Integer>();
 		
 		tabelaProcessos = leitor.getTabela();
 		
 		for(int i = 1; i <= tabelaProcessos.size(); i++){
-			prontos.insere(i);
+			prontos.add(i);
 			System.out.println(i);
 		}
 	}
@@ -39,16 +39,17 @@ public class Escalonador implements Runnable {
 			
 			boolean flag = false;
 			boolean flagIO = false;
-			while(tabelaProcessos.size() > 0){
+			while(tabelaProcessos.size()>0){
 				
 				int proc = 1;
 				
 				
-				//while (prontos.size() == 0) {  
-				//	diminuiBloqueados();
-				//}
+				while (prontos.size() == 0) {  
+					diminuiBloqueados();
+				}
 				//Remove o primeiro processo na fila de prontos
-				proc = prontos.remove();
+				proc = prontos.remove(0);
+				
 				maquina.setPC(tabelaProcessos.get(proc).getPC());
 				maquina.setREGX(tabelaProcessos.get(proc).getREGX());
 				maquina.setREGY(tabelaProcessos.get(proc).getREGY());
@@ -56,7 +57,7 @@ public class Escalonador implements Runnable {
 				//Seta o processo atual como Executando
 				tabelaProcessos.get(proc).setEstado(2);
 				
-				while(quantumAtual <= quantum){
+				while(quantumAtual < quantum){
 					quantumAtual++;
 					System.out.println(tabelaProcessos.get(proc).getNomeProcesso());
 					
@@ -83,8 +84,9 @@ public class Escalonador implements Runnable {
 						break;
 						
 					case "SAIDA":
-						System.out.println("Encerrando o Programa");
 						
+						System.out.println("Encerrando o Programa");
+						flag = true;
 						encerraProcesso(proc);
 						break;
 						
@@ -120,14 +122,15 @@ public class Escalonador implements Runnable {
 					bloqueiaProcesso(proc);
 					flagIO = false;
 				}
+				
 				flag = false;
 				quantumAtual = 0;
-				try {
-					Thread.sleep(500);
+			/*	try {
+					//Thread.sleep(500);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
-				}
+				}*/
 			}
 			 
 
@@ -139,13 +142,13 @@ public class Escalonador implements Runnable {
 	void diminuiBloqueados(){
 		int processo;
 		List<Integer> aux = new LinkedList<Integer>();
-		while(bloqueados.iterator().hasNext()){
-			processo = bloqueados.iterator().next();
+		for(int g : bloqueados){
+			processo = g;
 			tabelaProcessos.get(processo).decTempBloq();
 			if(tabelaProcessos.get(processo).gettDesbloq() == 0){
 				aux.add(processo);
 				tabelaProcessos.get(processo).setEstado(1);
-				prontos.insere(processo);
+				prontos.add(processo);
 				
 			}
 		}
@@ -156,7 +159,7 @@ public class Escalonador implements Runnable {
 		salvaContexto(processo);
 		tabelaProcessos.get(processo).setEstado(0);
 		tabelaProcessos.get(processo).setTempoBloq(tempoBloqueado);
-		bloqueados.insere(processo);
+		bloqueados.add(processo);
 		
 	}
 	// Salva o contexto atual do processo
@@ -171,13 +174,15 @@ public class Escalonador implements Runnable {
 	//Faz a preempção do processo
 	void trocaProcesso(int processo){
 		salvaContexto(processo);
-		prontos.insere(processo);
+		prontos.add(processo);
 		
 		
 	}
 	
 	void encerraProcesso(int processo){
 		tabelaProcessos.remove(processo);
+		
+		
 		
 		
 	}
