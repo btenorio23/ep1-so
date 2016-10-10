@@ -30,9 +30,11 @@ public class Escalonador implements Runnable {
 	int qtdProcessos = 0;
 	
 	public Escalonador(){
+		leitor = new LeitorArquivos();
+		quantum = leitor.getQuantum();
 		
 		BufferedWriter log = null;
-		File logFile = new File("src/log/log.txt"); 
+		File logFile = new File("src/log/log"+quantum+ ".txt"); 
 		logFile.getParentFile().mkdirs();	
 		Path arquivos = Paths.get("src/log/log.txt");
 		try {
@@ -43,10 +45,6 @@ public class Escalonador implements Runnable {
 		}
 		
 		maquina = new Maquina(0, 0, 1);
-		
-		leitor = new LeitorArquivos();
-		quantum = leitor.getQuantum();
-
 		//tabelaProcessos = );
 		prontos = new LinkedList<Integer>();
 		bloqueados = new LinkedList<Integer>();
