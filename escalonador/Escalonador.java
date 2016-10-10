@@ -56,6 +56,8 @@ public class Escalonador implements Runnable {
 		BufferedWriter log = null;
 		File logFile;
 		Path arquivos;
+		
+		//usamos o if para escrever "0" para numeros < 10
 		if(quantum < 10) {
 			logFile = new File("src/log/log"+ "0" +quantum+ ".txt");
 			logFile.getParentFile().mkdirs();	
@@ -97,7 +99,7 @@ public class Escalonador implements Runnable {
 	//FUNCAO QUE ESCREVE UMA DETERMINADA STRING NO LOG FILE
 	public void escreveLog(String s) {
 		try {
-		    Files.write(Paths.get("src/log/log.txt"), (s+"\n").getBytes(), StandardOpenOption.APPEND);
+		    Files.write(Paths.get("src/log/log"+ quantum +".txt"), (s+"\n").getBytes(), StandardOpenOption.APPEND);
 		}catch (IOException e) {
 		    //exception handling left as an exercise for the reader
 		}
@@ -125,6 +127,7 @@ public class Escalonador implements Runnable {
 				//Remove o primeiro processo na fila de prontos
 				proc = prontos.remove(0);
 				
+				//SETAMOS O CONTEXTO DE ACORDO COM A TABELA DE PROCESSOS
 				maquina.setPC(tabelaProcessos.get(proc).getPC());
 				maquina.setREGX(tabelaProcessos.get(proc).getREGX());
 				maquina.setREGY(tabelaProcessos.get(proc).getREGY());
@@ -132,22 +135,34 @@ public class Escalonador implements Runnable {
 				//Seta o processo atual como Executando
 				tabelaProcessos.get(proc).setEstado(2);
 				
+				//REPETIMOS ENQUANTO O PROCESSO NAO RODAR O NUMERO DE VEZES DO QUANTUM RECUPERADO EM QUANTUM.TXT
 				while(quantumAtual < quantum){
+					
+					//SOMAMOS UM
 					quantumAtual++;
 					
 					//System.out.println(tabelaProcessos.get(proc).getNomeProcesso());
 					
+					//RECUPERAMOS O PROX COMANDO DE UM PROCESSO
 					String proxComando = tabelaProcessos.get(proc).codProg[maquina.getPC()];
 					
+					//AUMENTAMOS O PC
 					maquina.setPC(maquina.getPC()+1);
+					
+					//ESCREVEMOS NO LOG QUE USAMOS UMA INSTRUCAO
 					contadorInstrucoes++;
 					escreveLog("Executando TESTE-"+proc);
+					
+					//VERIFICAMOS QUAL O PROXIMO COMANDO
 					switch(proxComando) {
 					
 					
 					case "E/S":
+						//SETAMOS AS FLAGS
 						flagIO = true;
 						sinalFinal = true;
+						
+						//ESCREVEMOS LOG
 						escreveLog("E/S iniciada em TESTE"+proc);
 						//System.out.println("*************************");
 						
@@ -160,13 +175,20 @@ public class Escalonador implements Runnable {
 						break;
 						
 					case "SAIDA":
+						
+						//ESCREVEMOS NO LOG
 						escreveLog("TESTE-"+proc+ " terminado." + "X: "+maquina.getREGX() + " Y: "+maquina.getREGY());						
+						
+						//SETAMOS FLAG
 						sinalFinal = true;
+		
+						//ENCERRAMOS O PROCESSO REMOVENDO-O DA TABELA
 						encerraProcesso(proc);
 						break;
 						
 					default:
 						
+						//SETAMOS UM REG DE ACORDO COM O VALORES APOS O '='
 						if(proxComando.contains("=")) {
 							//System.out.println("Trabalhando com atribuição");
 							if(proxComando.contains("X")) {
@@ -183,20 +205,27 @@ public class Escalonador implements Runnable {
 						//System.out.println("*************************");
 					 
 					}
+						//VERIFICAMOS SE TODOS OS PROGRAMAS RODARAM PARA SAIR DO WHILE
 						if(sinalFinal == true)
 							break;
 		
 			}
 				
+				//TROCAMOS O PROCESSO CASO SEJA UM SINALFINAL
 				if(sinalFinal != true){
 					trocaProcesso(proc, quantumAtual);
 				}
 				
+				//BLOQUEAMOS CASO SEJA UM IO
 				if(flagIO == true){
 					bloqueiaProcesso(proc, quantumAtual);
 					flagIO = false;
 				}
+				
+				//ZERAMOS O QUANTUM ATUAL
 				quantumAtual = 0;
+				
+				//ZERAMOS O SINALFINAL
 				sinalFinal = false;
 				
 
@@ -206,42 +235,57 @@ public class Escalonador implements Runnable {
 
 	}
 	
+	//METODO QUE AJUDA NA LOGFILE
 	public void getMediaTrocas() {
 		escreveLog("MEDIA DE TROCAS: "+contadorTrocas/qtdProcessos);
 	}
 	
+	//METODO QUE AJUDA NA LOGFILE
 	public void getMediaInstrucoes() {
 		escreveLog("MEDIA DE INSTRUCOES: "+ contadorInstrucoes/contadorTrocas);
 	}
 	
+	//METODO QUE AJUDA NA LOGFILE
 	public void getQuantum() {
 		escreveLog("QUANTUM: "+quantum);
 	}
 	
-	//M�todo auxiliar para diminuir o tempo dos processos bloqueados
+	//Meodo auxiliar para diminuir o tempo dos processos bloqueados
 	void diminuiBloqueados(){
 		int processo;
+		//LISTA AUXILIAR PARA SABER QUAIS PROCESSOS BLOQUEADOS, DESBLOQUEAREMOS
 		List<Integer> aux = new LinkedList<Integer>();
 		for(int g : bloqueados){
 			processo = g;
 			tabelaProcessos.get(processo).decTempBloq();
+			//VERIFICA SE JA PASSOU TODO O SEU TEMPO COMO BLOQUEADO
 			if(tabelaProcessos.get(processo).gettDesbloq() == 0){
 				tabelaProcessos.get(processo).setEstado(1);
 				aux.add(processo);
 				
+				//ADICIONAMOS NA FILA DE PRONTOS
 				prontos.add(processo);
 				
 			}
 		}
+		
+		//REMOVEMOS COMO BLOQUEADOS TODOS OS QUE FORAM ADICIONADOS NA FILA DE PRONTOS
 		bloqueados.removeAll(aux);
 	}
 	//Bloqueia um processo e salva seu contexto
 	void bloqueiaProcesso(int processo, int quantumAtual){
 		contadorTrocas++;
 		escreveLog("Interrompendo TESTE"+processo+ "após"+  quantumAtual +"instruções");
+		//SALVAMOS O CONTEXTO DA CPU
 		salvaContexto(processo);
+		
+		//MUDAMOS O STATUS NA TABELA DE PROCESSO
 		tabelaProcessos.get(processo).setEstado(0);
+		
+		//ADICIONAMOS O TEMPO DE BLOQUEADO
 		tabelaProcessos.get(processo).setTempoBloq(tempoBloqueado);
+		
+		//ADICIONAMOS NA FILA DE BLOQUEADOS
 		bloqueados.add(processo);
 		
 	}
