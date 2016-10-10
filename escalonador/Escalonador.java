@@ -16,6 +16,7 @@ import core.Maquina;
 
 //Classe responsável por escalonar programas da maquina
 public class Escalonador implements Runnable {
+	//responsáve por ler os arquivos 
 	LeitorArquivos leitor;
 	Maquina maquina;
 	int quantumAtual = 0;
@@ -36,7 +37,7 @@ public class Escalonador implements Runnable {
 		BufferedWriter log = null;
 		File logFile = new File("src/log/log"+quantum+ ".txt"); 
 		logFile.getParentFile().mkdirs();	
-		Path arquivos = Paths.get("src/log/log.txt");
+		Path arquivos = Paths.get("src/log/log" +quantum  +".txt");
 		try {
 			log = Files.newBufferedWriter(arquivos);
 		} catch (IOException e) {
